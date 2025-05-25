@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام تسجيل الحضور والانصراف</title>
+    <link rel="stylesheet" href="index.css">
+    <style>
+        /* CSS سيأتي في القسم التالي */
+    </style>
+</head>
+<body>
+    <form name="submit-to-google-sheet">
+        <div class="container">
+            <h1><i class="fas fa-user-clock"></i> نظام تسجيل الحضور والانصراف</h1>
+            
+            <div class="form-group">
+                <label for="studentId">رقم التلميذ:</label>
+                <input type="text" id="studentId" name="studentId" placeholder="أدخل رقم التلميذ">
+                <button type="button" id="searchBtn" onclick="searchStudent()"><i class="fas fa-search"></i> بحث</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="studentName">الاسم الكامل:</label>
+                <input type="text" id="studentName" name="studentName" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="loginTime">الدخول:</label>
+                <input type="text" id="loginTime" name="loginTime" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="logoutTime">الخروج:</label>
+                <input type="text" id="logoutTime" name="logoutTime" readonly>
+            </div>
+            
+            <div class="buttons">
+                <button type="button" id="loginBtn" onclick="recordLogin()"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
+                <button type="button" id="logoutBtn" onclick="recordLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+                <button type="button" id="resetBtn" onclick="resetForm()"><i class="fas fa-redo"></i> إعادة تعيين</button>
+                <button type="submit" id="saveBtn"><i class="fas fa-save"></i> حفظ البيانات</button>
+            </div>
+            
+            <div id="message" class="message"></div>
+        </div>
+    </form>
+
+    <script>
+        // قاعدة بيانات افتراضية للتلاميذ
+        const students = {
+            "1001": { name: "أحمد محمد علي", loginTime: null, logoutTime: null },
+            "1002": { name: "سارة خالد حسن", loginTime: null, logoutTime: null },
+            "1003": { name: "علي محمود إبراهيم", loginTime: null, logoutTime: null },
+            "1004": { name: "فاطمة عمر عبد الله", loginTime: null, logoutTime: null },
+            "1005": { name: "يوسف سمير رشيد", loginTime: null, logoutTime: null }
+        };
+
+        // دالة البحث عن التلميذ
+        function searchStudent() {
+            const studentId = document.getElementById('studentId').value;
+            const studentName = document.getElementById('studentName');
+            const loginTime = document.getElementById('loginTime');
+            const logoutTime = document.getElementById('logoutTime');
+            const message = document.getElementById('message');
+            
+            if (students[studentId]) {
+                studentName.value = students[studentId].name;
+                
+                if (students[studentId].loginTime) {
+                    loginTime.value = students[studentId].loginTime;
+                } else {
+                    loginTime.value = "لم يتم تسجيل الدخول بعد";
+                }
+                
+                if (students[studentId].logoutTime) {
+                    logoutTime.value = students[studentId].logoutTime;
+                } else {
+                    logoutTime.value = "لم يتم تسجيل الخروج بعد";
+                }
+                
+                message.textContent = "";
+                message.className = "message";
+            } else {
+                message.textContent = "رقم التلميذ غير موجود في النظام";
+                message.className = "message error";
+                studentName.value = "";
+                loginTime.value = "";
+                logoutTime.value = "";
+            }
+        }
+
+        // دالة تسجيل الدخول
+        function recordLogin() {
+            const studentId = document.getElementById('studentId').value;
+            const message = document.getElementById('message');
+            
+            if (!studentId || !students[studentId]) {
+                message.textContent = "الرجاء البحث عن التلميذ أولاً";
+                message.className = "message error";
+                return;
+            }
+            
+            if (students[studentId].loginTime) {
+                message.textContent = "تم تسجيل الدخول مسبقاً في " + students[studentId].loginTime;
+                message.className = "message warning";
+                return;
+            }
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-EG');
+            const dateString = now.toLocaleDateString('ar-EG');
+            const fullDateTime = dateString + " " + timeString;
+            
+            students[studentId].loginTime = fullDateTime;
+            document.getElementById('loginTime').value = fullDateTime;
+            
+            message.textContent = "تم تسجيل الدخول بنجاح";
+            message.className = "message success";
+        }
+
+        // دالة تسجيل الخروج
+        function recordLogout() {
+            const studentId = document.getElementById('studentId').value;
+            const message = document.getElementById('message');
+            
+            if (!studentId || !students[studentId]) {
+                message.textContent = "الرجاء البحث عن التلميذ أولاً";
+                message.className = "message error";
+                return;
+            }
+            
+            if (!students[studentId].loginTime) {
+                message.textContent = "يجب تسجيل الدخول أولاً قبل تسجيل الخروج";
+                message.className = "message error";
+                return;
+            }
+            
+            if (students[studentId].logoutTime) {
+                message.textContent = "تم تسجيل الخروج مسبقاً في " + students[studentId].logoutTime;
+                message.className = "message warning";
+                return;
+            }
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-EG');
+            const dateString = now.toLocaleDateString('ar-EG');
+            const fullDateTime = dateString + " " + timeString;
+            
+            students[studentId].logoutTime = fullDateTime;
+            document.getElementById('logoutTime').value = fullDateTime;
+            
+            message.textContent = "تم تسجيل الخروج بنجاح";
+            message.className = "message success";
+        }
+
+        // دالة إعادة تعيين النموذج
+        function resetForm() {
+            document.getElementById('studentId').value = "";
+            document.getElementById('studentName').value = "";
+            document.getElementById('loginTime').value = "";
+            document.getElementById('logoutTime').value = "";
+            document.getElementById('message').textContent = "";
+            document.getElementById('message').className = "message";
+        }
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwU2kBviRRfXZ-lCg200dxrDmKDGq62DN7Iq2Eg6oXgW0cA-tjmwpFVSOreRcCiDQMC/exec';
+const form = document.forms['submit-to-google-sheet'];
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  
+  // تحديث البيانات قبل الإرسال
+  const studentId = document.getElementById('studentId').value;
+  const studentName = document.getElementById('studentName').value;
+  const loginTime = document.getElementById('loginTime').value;
+  const logoutTime = document.getElementById('logoutTime').value;
+  
+  fetch(scriptURL, { 
+    method: 'POST', 
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `studentId=${encodeURIComponent(studentId)}&studentName=${encodeURIComponent(studentName)}&loginTime=${encodeURIComponent(loginTime)}&logoutTime=${encodeURIComponent(logoutTime)}`
+  })
+  .then(response => {
+    if (!response.ok) throw new Error('Network response was not ok');
+    return response.json();
+  })
+  .then(data => {
+    console.log('Success:', data);
+    document.getElementById('message').textContent = "تم حفظ البيانات بنجاح في الصف " + data.row;
+    document.getElementById('message').className = "message success";
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    document.getElementById('message').textContent = "حدث خطأ أثناء حفظ البيانات: " + error.message;
+    document.getElementById('message').className = "message error";
+  });
+});   
+    </script>
+</body>
+</html>
