@@ -164,39 +164,43 @@
             document.getElementById('message').className = "message";
         }
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwU2kBviRRfXZ-lCg200dxrDmKDGq62DN7Iq2Eg6oXgW0cA-tjmwpFVSOreRcCiDQMC/exec';
-const form = document.forms['submit-to-google-sheet'];
-
-form.addEventListener('submit', e => {
+const form = document.forms['submit-to-google-sheet'].addEventListener('submit', async (e) => {
   e.preventDefault();
   
-  // تحديث البيانات قبل الإرسال
-  const studentId = document.getElementById('studentId').value;
-  const studentName = document.getElementById('studentName').value;
-  const loginTime = document.getElementById('loginTime').value;
-  const logoutTime = document.getElementById('logoutTime').value;
+  const formData = {
+    studentId: document.getElementById("studentId").value,
+    studentName: document.getElementById("studentName").value,
+    loginTime: document.getElementById("loginTime").value || "لم يتم التسجيل",
+    logoutTime: document.getElementById("logoutTime").value || "لم يتم التسجيل"
+  };
   
-  fetch(scriptURL, { 
-    method: 'POST', 
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: `studentId=${encodeURIComponent(studentId)}&studentName=${encodeURIComponent(studentName)}&loginTime=${encodeURIComponent(loginTime)}&logoutTime=${encodeURIComponent(logoutTime)}`
-  })
-  .then(response => {
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  })
-  .then(data => {
-    console.log('Success:', data);
-    document.getElementById('message').textContent = "تم حفظ البيانات بنجاح في الصف " + data.row;
-    document.getElementById('message').className = "message success";
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    document.getElementById('message').textContent = "حدث خطأ أثناء حفظ البيانات: " + error.message;
-    document.getElementById('message').className = "message error";
-  });
-});   
+  try {
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData)
+    });
+    
+    const result = await response.json();
+    
+    if (result.status === "error") throw new Error(result.message);
+    
+    // عرض الرسالة مع رقم الصف (result.row)
+    document.getElementById("message").innerHTML = `
+      <div class="alert success">
+        ${result.message}<br>
+        <small>رقم الصف: ${result.row}</small>
+      </div>
+    `;
+    
+  } catch (error) {
+    document.getElementById("message").innerHTML = `
+      <div class="alert error">
+        ${error.message}
+      </div>
+    `;
+  }
+});
     </script>
 </body>
 </html>
